@@ -23,6 +23,22 @@ android {
     }
 }
 
+repositories {
+    maven { url 'https://repo.dairy.foundation/snapshots' } // solverslib
+    maven { url 'https://maven.pedropathing.com' } // pedropathing
+    maven { url "https://mymaven.bylazar.com/releases" } // panels
+}
+
 dependencies {
     implementation project(':FtcRobotController')
+
+    // SolversLib
+    implementation "org.solverslib:core:SNAPSHOT-3e6a22e"
+
+    // PedroPathing
+    implementation 'com.pedropathing:ftc:2.0.1'
+    implementation 'com.pedropathing:telemetry:0.0.6'
+
+    // Panels
+    implementation 'com.bylazar:fullpanels:1.0.3'
 }
