@@ -19,4 +19,6 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build SampleApplication
+        env:
+          GRADLE_OPTS: "-Xmx4g"
         run: ./gradlew --no-daemon build
