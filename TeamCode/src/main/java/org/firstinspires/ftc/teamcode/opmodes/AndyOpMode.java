@@ -66,7 +66,7 @@ public class AndyOpMode extends CommandOpMode {
         // Test PedroPathing command
         Follower follower = drivetrainSubsystem.createFollower();
         Pose pose1 = new Pose(0,0, 0);
-        Pose pose2 = new Pose(0, .5, 0);
+        Pose pose2 = new Pose(12, 0, 0);
         PathChain path = follower.pathBuilder()
                 .addPath(new BezierLine(pose1, pose2))
                 .setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading())

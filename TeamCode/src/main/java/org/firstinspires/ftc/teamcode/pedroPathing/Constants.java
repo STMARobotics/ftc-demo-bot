@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.drivetrains.MecanumConstants;
 import com.pedropathing.ftc.localization.constants.OTOSConstants;
@@ -20,14 +21,16 @@ public class Constants {
 
     public static final OTOSConstants OTOS_CONSTANTS = new OTOSConstants()
             .hardwareMapName(OTOS_NAME)
-            .linearUnit(DistanceUnit.METER)
+            .linearUnit(DistanceUnit.INCH)
             .angleUnit(AngleUnit.RADIANS)
             .linearScalar(1.0)
             .angularScalar(1.0)
             .offset(new SparkFunOTOS.Pose2D(0.016, 0.09, Math.PI));
 
     public static final FollowerConstants FOLLOWER_CONSTANTS = new FollowerConstants()
-            .mass(5);
+            .mass(5) // must be kg
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.0, 0))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.0, 0));
 
     public static final MecanumConstants DRIVE_CONSTANTS = new MecanumConstants()
             .maxPower(1)

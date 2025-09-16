@@ -20,7 +20,6 @@ public class FollowPathCommand extends CommandBase {
 
     public FollowPathCommand(Follower follower, PathChain pathChain, DrivetrainSubsystem drivetrainSubsystem) {
         this(follower, pathChain, true, drivetrainSubsystem);
-        addRequirements(drivetrainSubsystem);
     }
 
     public FollowPathCommand(Follower follower, PathChain pathChain, boolean holdEnd, DrivetrainSubsystem drivetrainSubsystem) {
@@ -37,6 +36,8 @@ public class FollowPathCommand extends CommandBase {
         this.holdEnd = holdEnd;
         this.maxPower = maxPower;
         this.drivetrainSubsystem = drivetrainSubsystem;
+
+        addRequirements(drivetrainSubsystem);
     }
 
     public FollowPathCommand(Follower follower, Path pathChain, DrivetrainSubsystem drivetrainSubsystem) {
@@ -57,6 +58,8 @@ public class FollowPathCommand extends CommandBase {
         this.holdEnd = holdEnd;
         this.maxPower = maxPower;
         this.drivetrainSubsystem = drivetrainSubsystem;
+
+        addRequirements(drivetrainSubsystem);
     }
 
     /**
@@ -77,6 +80,11 @@ public class FollowPathCommand extends CommandBase {
             follower.followPath(pathChain, maxPower, holdEnd);
         }
         follower.followPath(pathChain, holdEnd);
+    }
+
+    @Override
+    public void execute() {
+        follower.update();
     }
 
     @Override
