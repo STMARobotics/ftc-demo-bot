@@ -1,153 +1,131 @@
 package org.firstinspires.ftc.teamcode.drivetrain;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.DRIVE_CONSTANTS;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.FOLLOWER_CONSTANTS;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.OTOS_CONSTANTS;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.PATH_CONSTRAINTS;
+
 import com.pedropathing.follower.Follower;
-import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
-import com.pedropathing.ftc.drivetrains.MecanumConstants;
-import com.pedropathing.ftc.localization.constants.OTOSConstants;
-import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-import com.seattlesolvers.solverslib.hardware.motors.Motor;
 import com.seattlesolvers.solverslib.util.MathUtils;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
  * Drivetrain subsystem. Encapsulates the details of <i>how</i> the drivetrain works.
  */
 public class DrivetrainSubsystem extends SubsystemBase {
 
-    // Motor name constants
-    private static final String FRONT_LEFT_MOTOR_NAME = "front_left_motor";
-    private static final String BACK_LEFT_MOTOR_NAME = "back_left_motor";
-    private static final String FRONT_RIGHT_MOTOR_NAME = "front_right_motor";
-    private static final String BACK_RIGHT_MOTOR_NAME = "back_right_motor";
-
-    // OTOS sensor constants
-    private static final String OTOS_SENSOR_NAME = "sensor_otos";
-    private static final double OTOS_LINEAR_SCALAR = 1.0;
-    private static final double OTOS_ANGULAR_SCALAR = 1.0;
-
     private final HardwareMap hardwareMap;
 
-    private final Motor frontLeftMotor;
-    private final Motor backLeftMotor;
-    private final Motor frontRightMotor;
-    private final Motor backRightMotor;
+    // Motors
+    private final DcMotor frontLeftMotor;
+    private final DcMotor backLeftMotor;
+    private final DcMotor frontRightMotor;
+    private final DcMotor backRightMotor;
 
-    private final SparkFunOTOS myOtos;
+    // OTOS sensor
+    private final SparkFunOTOS otosSensor;
 
-    // PedroPathing
-    private final static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(5);
-    private final static MecanumConstants driveConstants = new MecanumConstants()
-            .maxPower(1)
-            .rightFrontMotorName(FRONT_RIGHT_MOTOR_NAME)
-            .rightRearMotorName(BACK_RIGHT_MOTOR_NAME)
-            .leftRearMotorName(BACK_LEFT_MOTOR_NAME)
-            .leftFrontMotorName(FRONT_LEFT_MOTOR_NAME)
-            .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD);
-
-    private final static OTOSConstants otosLocalizer = new OTOSConstants()
-            .hardwareMapName(OTOS_SENSOR_NAME)
-            .linearUnit(DistanceUnit.METER)
-            .angleUnit(AngleUnit.RADIANS)
-            .linearScalar(OTOS_LINEAR_SCALAR)
-            .angularScalar(OTOS_ANGULAR_SCALAR);
+    private SparkFunOTOS.Pose2D currentPose = new SparkFunOTOS.Pose2D();
 
     public DrivetrainSubsystem(HardwareMap hardwareMap) {
         this.hardwareMap = hardwareMap;
 
-        frontLeftMotor = new Motor(hardwareMap, FRONT_LEFT_MOTOR_NAME);
-        backLeftMotor = new Motor(hardwareMap, BACK_LEFT_MOTOR_NAME);
-        frontRightMotor = new Motor(hardwareMap, FRONT_RIGHT_MOTOR_NAME);
-        backRightMotor = new Motor(hardwareMap, BACK_RIGHT_MOTOR_NAME);
+        frontLeftMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.leftFrontMotorName);
+        backLeftMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.leftRearMotorName);
+        frontRightMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.rightFrontMotorName);
+        backRightMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.rightRearMotorName);
 
-        frontLeftMotor.setInverted(true);
-        backLeftMotor.setInverted(true);
+        frontLeftMotor.setDirection(DRIVE_CONSTANTS.leftFrontMotorDirection);
+        backLeftMotor.setDirection(DRIVE_CONSTANTS.leftRearMotorDirection);
+        frontRightMotor.setDirection(DRIVE_CONSTANTS.rightFrontMotorDirection);
+        backRightMotor.setDirection(DRIVE_CONSTANTS.rightRearMotorDirection);
 
-        frontLeftMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        backLeftMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        frontRightMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        backRightMotor.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+        frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        myOtos = hardwareMap.get(SparkFunOTOS.class, OTOS_SENSOR_NAME);
-
-        myOtos.setLinearUnit(DistanceUnit.METER);
-        myOtos.setAngularUnit(AngleUnit.RADIANS);
-        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0.09, -0.16, Math.PI);
-        myOtos.setOffset(offset);
-        myOtos.setLinearScalar(OTOS_LINEAR_SCALAR);
-        myOtos.setAngularScalar(OTOS_ANGULAR_SCALAR);
-        myOtos.calibrateImu();
-        myOtos.resetTracking();
-
-        SparkFunOTOS.Pose2D currentPosition = new SparkFunOTOS.Pose2D(0, 0, 0);
-        myOtos.setPosition(currentPosition);
+        // Set up the OTOS sensor, using the same constants we use to configure it with PedroPathing
+        otosSensor = hardwareMap.get(SparkFunOTOS.class, OTOS_CONSTANTS.hardwareMapName);
+        otosSensor.setLinearUnit(OTOS_CONSTANTS.linearUnit);
+        otosSensor.setAngularUnit(OTOS_CONSTANTS.angleUnit);
+        otosSensor.setOffset(OTOS_CONSTANTS.offset);
+        otosSensor.setLinearScalar(OTOS_CONSTANTS.linearScalar);
+        otosSensor.setAngularScalar(OTOS_CONSTANTS.angularScalar);
+        otosSensor.calibrateImu();
+        otosSensor.resetTracking();
 
         // Get the hardware and firmware version
         SparkFunOTOS.Version hwVersion = new SparkFunOTOS.Version();
         SparkFunOTOS.Version fwVersion = new SparkFunOTOS.Version();
-        myOtos.getVersionInfo(hwVersion, fwVersion);
-
+        otosSensor.getVersionInfo(hwVersion, fwVersion);
+        resetLocalization();
     }
 
     /**
      * Drive the robot on field centric manner
-     * @param translationY robot forward/back speed in range of [-1, 1]. Forward positive
-     * @param translationX robot strafe speed in range [-1, 1]. Right positive
+     * @param translationX robot strafe along the X axis in range [-1, 1]. The X axis runs along the
+     *                     field perimeter on the audience side. The robot is facing the positive
+     *                     X direction when it has a heading of 0 radians (0°)
+     * @param translationY robot speed along the Y axis in range [-1, 1]. The Y axis runs along the
+     *                     field perimeter on the red alliance side. The robot is facing the
+     *                     positive Y direction when it has a heading of 1/2 PI radians (90°).
      * @param rotation robot rotation speed in range of [-1, 1]. Counterclockwise positive
      * @param reductionFactor value to multiply the speed parameters by in range [0, 1]
      */
-    public void drive(double translationY, double translationX, double rotation, double reductionFactor) {
-        reductionFactor = MathUtils.clamp(reductionFactor, 0.0, 1.0);
+    public void drive(double translationX, double translationY, double rotation, double reductionFactor) {
+        double clampedReduction = MathUtils.clamp(reductionFactor, 0.0, 1.0);
 
-        translationY *= reductionFactor;
-        translationX *= reductionFactor;
-        rotation *= reductionFactor;
+        // Square and reduce the axes
+        double modifiedY = translationY * clampedReduction;
+        double modifiedX = translationX * clampedReduction;
+        double modifiedRotation = rotation * clampedReduction;
 
-        double botHeading = myOtos.getPosition().h;
-        double rotX = translationX * Math.cos(-botHeading) - translationY * Math.sin(-botHeading);
-        double rotY = translationX * Math.sin(-botHeading) + translationY * Math.cos(-botHeading);
+        // Rotate the heading based on the robot's heading on the field
+        double botHeading = currentPose.h;
+        double rotX = modifiedX * Math.sin(botHeading) - modifiedY * Math.cos(botHeading);
+        double rotY = modifiedX * Math.cos(botHeading) + modifiedY * Math.sin(botHeading);
 
-        rotX *= 1.1;
+        // Calculate the output for each wheel
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(modifiedRotation), 1);
+        double frontLeftPower = (rotY + rotX - modifiedRotation) / denominator;
+        double backLeftPower = (rotY - rotX - modifiedRotation) / denominator;
+        double frontRightPower = (rotY - rotX + modifiedRotation) / denominator;
+        double backRightPower = (rotY + rotX + modifiedRotation) / denominator;
 
-        double denominator = calculateDenominator(rotX, rotY, rotation);
-        double frontLeftPower = (rotY + rotX + rotation) / denominator;
-        double backLeftPower = (rotY - rotX + rotation) / denominator;
-        double frontRightPower = (rotY - rotX - rotation) / denominator;
-        double backRightPower = (rotY + rotX - rotation) / denominator;
-
-        frontLeftMotor.set(frontLeftPower);
-        backLeftMotor.set(backLeftPower);
-        frontRightMotor.set(frontRightPower);
-        backRightMotor.set(backRightPower);
+        // Apply the output to the motors
+        frontLeftMotor.setPower(frontLeftPower);
+        backLeftMotor.setPower(backLeftPower);
+        frontRightMotor.setPower(frontRightPower);
+        backRightMotor.setPower(backRightPower);
     }
 
     /**
      * Creates a PedroPath Follower.
-     * @param pathConstraints PedroPath path constraints
      * @return new follower
      */
-    public Follower createFollower(PathConstraints pathConstraints) {
-        return new FollowerBuilder(followerConstants, hardwareMap)
-                .pathConstraints(pathConstraints)
-                .OTOSLocalizer(otosLocalizer)
-                .mecanumDrivetrain(driveConstants)
+    public Follower createFollower() {
+        return new FollowerBuilder(FOLLOWER_CONSTANTS, hardwareMap)
+                .pathConstraints(PATH_CONSTRAINTS)
+                .OTOSLocalizer(OTOS_CONSTANTS)
+                .mecanumDrivetrain(DRIVE_CONSTANTS)
                 .build();
     }
 
-    private double calculateDenominator(double rotX, double rotY, double rx) {
-        double sum = Math.abs(rotX) + Math.abs(rotY) + Math.abs(rx);
-        return sum > 1 ? sum : 1;
+    public void resetLocalization() {
+        otosSensor.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
+    }
+
+    @Override
+    public void periodic() {
+        // This is a blocking call that can take tens of milliseconds, so only do it once per period
+        currentPose = otosSensor.getPosition();
     }
 
     /**
@@ -155,16 +133,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
      * @param telemetry telemetry object
      */
     public void telemetrize(Telemetry telemetry) {
-        SparkFunOTOS.Pose2D pos = myOtos.getPosition(); // Is this a blocking call that I should get once in periodic()?
-
-        // Inform user of available controls
-        telemetry.addLine("Press Y (triangle) on Gamepad to reset tracking");
-        telemetry.addLine("Press X (square) on Gamepad to calibrate the IMU");
-        telemetry.addLine();
-
         // Log the position to the telemetry
-        telemetry.addData("X coordinate (meters)", pos.x);
-        telemetry.addData("Y coordinate (meters)", pos.y);
-        telemetry.addData("Heading angle (radians)", pos.h);
+        telemetry.addData("X coordinate (meters)", currentPose.x);
+        telemetry.addData("Y coordinate (meters)", currentPose.y);
+        telemetry.addData("Heading angle (radians)", currentPose.h);
     }
 }

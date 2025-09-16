@@ -16,13 +16,19 @@ import com.bylazar.field.Style;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.*;
-import com.pedropathing.math.*;
-import com.pedropathing.paths.*;
+import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Vector;
+import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
 import com.pedropathing.telemetry.SelectableOpMode;
-import com.pedropathing.util.*;
+import com.pedropathing.util.PoseHistory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.drivetrain.DrivetrainSubsystem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,11 +83,12 @@ public class Tuning extends SelectableOpMode {
 
     @Override
     public void onSelect() {
+        DrivetrainSubsystem drivetrain = new DrivetrainSubsystem(hardwareMap);
         if (follower == null) {
-            follower = Constants.createFollower(hardwareMap);
+            follower = drivetrain.createFollower();
             PanelsConfigurables.INSTANCE.refreshClass(this);
         } else {
-            follower = Constants.createFollower(hardwareMap);
+            follower = drivetrain.createFollower();
         }
 
         follower.setStartingPose(new Pose());
