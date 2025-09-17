@@ -83,9 +83,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
         double clampedReduction = MathUtils.clamp(reductionFactor, 0.0, 1.0);
 
         // Square and reduce the axes
-        double modifiedY = translationY * clampedReduction;
-        double modifiedX = translationX * clampedReduction;
-        double modifiedRotation = rotation * clampedReduction;
+        double modifiedY = square(translationY * clampedReduction);
+        double modifiedX = square(translationX * clampedReduction);
+        double modifiedRotation = square(rotation * clampedReduction);
 
         // Rotate the heading based on the robot's heading on the field
         double botHeading = currentPose.h;
@@ -104,6 +104,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
         backLeftMotor.setPower(backLeftPower);
         frontRightMotor.setPower(frontRightPower);
         backRightMotor.setPower(backRightPower);
+    }
+
+    public void stop() {
+        frontLeftMotor.setPower(0.0);
+        backLeftMotor.setPower(0.0);
+        frontRightMotor.setPower(0.0);
+        backRightMotor.setPower(0.0);
     }
 
     /**
@@ -138,4 +145,9 @@ public class DrivetrainSubsystem extends SubsystemBase {
         telemetry.addData("Y coordinate (meters)", currentPose.y);
         telemetry.addData("Heading angle (radians)", currentPose.h);
     }
+
+    public static double square(double value) {
+        return Math.copySign(value * value, value);
+    }
+
 }

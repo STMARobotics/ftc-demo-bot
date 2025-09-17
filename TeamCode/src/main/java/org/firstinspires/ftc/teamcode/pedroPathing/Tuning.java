@@ -242,7 +242,7 @@ class LateralTuner extends OpMode {
     /** This initializes the PoseUpdater as well as the Panels telemetry. */
     @Override
     public void init_loop() {
-        telemetryM.debug("Pull your robot to the right " + DISTANCE + " inches. Your strafe ticks to inches will be shown on the telemetry.");
+        telemetryM.debug("Pull your robot to the left " + DISTANCE + " inches. Your strafe ticks to inches will be shown on the telemetry.");
         telemetryM.update(telemetry);
         drawCurrent();
     }
@@ -289,7 +289,7 @@ class TurnTuner extends OpMode {
     /** This initializes the PoseUpdater as well as the Panels telemetry. */
     @Override
     public void init_loop() {
-        telemetryM.debug("Turn your robot " + ANGLE + " radians. Your turn ticks to inches will be shown on the telemetry.");
+        telemetryM.debug("Turn your robot " + ANGLE + " radians. Your turn radians will be shown on the telemetry.");
         telemetryM.update(telemetry);
 
         drawCurrent();
@@ -304,7 +304,7 @@ class TurnTuner extends OpMode {
         follower.update();
 
         telemetryM.debug("Total Angle: " + follower.getTotalHeading());
-        telemetryM.debug("The multiplier will display what your turn ticks to inches should be to scale your current angle to " + ANGLE + " radians.");
+        telemetryM.debug("The multiplier will display the scalar from your current angle to " + ANGLE + " radians.");
         telemetryM.debug("Multiplier: " + (ANGLE / (follower.getTotalHeading() / follower.getPoseTracker().getLocalizer().getTurningMultiplier())));
         telemetryM.update(telemetry);
 
@@ -449,7 +449,7 @@ class LateralVelocityTuner extends OpMode {
      */
     @Override
     public void init_loop() {
-        telemetryM.debug("The robot will run at 1 power until it reaches " + DISTANCE + " inches to the right.");
+        telemetryM.debug("The robot will run at 1 power until it reaches " + DISTANCE + " inches to the left.");
         telemetryM.debug("Make sure you have enough room, since the robot has inertia after cutting power.");
         telemetryM.debug("After running the distance, the robot will cut power from the drivetrain and display the strafe velocity.");
         telemetryM.debug("Press B on Gamepad 1 to stop.");
@@ -650,7 +650,7 @@ class LateralZeroPowerAccelerationTuner extends OpMode {
     /** This initializes the drive motors as well as the Panels telemetry. */
     @Override
     public void init_loop() {
-        telemetryM.debug("The robot will run to the right until it reaches " + VELOCITY + " inches per second.");
+        telemetryM.debug("The robot will run to the left until it reaches " + VELOCITY + " inches per second.");
         telemetryM.debug("Then, it will cut power from the drivetrain and roll to a stop.");
         telemetryM.debug("Make sure you have enough room.");
         telemetryM.debug("After stopping, the lateral zero power acceleration (natural deceleration) will be displayed.");

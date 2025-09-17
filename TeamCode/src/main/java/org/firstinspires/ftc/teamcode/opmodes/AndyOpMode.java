@@ -66,13 +66,16 @@ public class AndyOpMode extends CommandOpMode {
         // Test PedroPathing command
         Follower follower = drivetrainSubsystem.createFollower();
         Pose pose1 = new Pose(0,0, 0);
-        Pose pose2 = new Pose(12, 0, 0);
+        Pose pose2 = new Pose(12, 0, 90);
+        Pose pose3 = new Pose(12, 12, 90);
         PathChain path = follower.pathBuilder()
                 .addPath(new BezierLine(pose1, pose2))
                 .setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading())
+                .addPath(new BezierLine(pose2, pose3))
+                .setLinearHeadingInterpolation(pose2.getHeading(), pose3.getHeading())
                 .build();
         FollowPathCommand followPathCommand =
-                new FollowPathCommand(follower, path, drivetrainSubsystem);
+                new FollowPathCommand(pose1, follower, path, drivetrainSubsystem);
 
         // Motif AprilTag
         MotifIndicatorCommand motifIndicatorCommand =

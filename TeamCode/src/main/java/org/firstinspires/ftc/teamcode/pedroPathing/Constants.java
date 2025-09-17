@@ -23,17 +23,24 @@ public class Constants {
             .hardwareMapName(OTOS_NAME)
             .linearUnit(DistanceUnit.INCH)
             .angleUnit(AngleUnit.RADIANS)
-            .linearScalar(1.0)
-            .angularScalar(1.0)
-            .offset(new SparkFunOTOS.Pose2D(0.016, 0.09, Math.PI));
+            .linearScalar(1.07)
+            .angularScalar(0.99)
+            .offset(new SparkFunOTOS.Pose2D(
+                    3.5, // +x forward
+                    0.5, // +y right
+                    Math.PI)); // π radians or 180°
 
     public static final FollowerConstants FOLLOWER_CONSTANTS = new FollowerConstants()
             .mass(5) // must be kg
+            .forwardZeroPowerAcceleration(-58.742)
+            .lateralZeroPowerAcceleration(-82.934)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.0, 0))
-            .headingPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.0, 0));
+            .headingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0.0, 0));
 
     public static final MecanumConstants DRIVE_CONSTANTS = new MecanumConstants()
             .maxPower(1)
+            .xVelocity(65.413)
+            .yVelocity(52.851)
             .rightFrontMotorName(FRONT_RIGHT_MOTOR_NAME)
             .rightRearMotorName(BACK_RIGHT_MOTOR_NAME)
             .leftRearMotorName(BACK_LEFT_MOTOR_NAME)

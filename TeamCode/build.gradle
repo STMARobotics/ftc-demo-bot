@@ -40,5 +40,5 @@ dependencies {
     implementation 'com.pedropathing:telemetry:0.0.6'
 
     // Panels
-    implementation 'com.bylazar:fullpanels:1.0.3'
+    implementation 'com.bylazar:fullpanels:1.0.6'
 }
