@@ -20,5 +20,5 @@ jobs:
 
       - name: Build SampleApplication
         env:
-          GRADLE_OPTS: "-Xmx4g"
+          GRADLE_OPTS: "-Xmx8g"
         run: ./gradlew --no-daemon build
