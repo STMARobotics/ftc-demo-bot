@@ -65,17 +65,29 @@ public class AndyOpMode extends CommandOpMode {
     private void configureButtonBindings() {
         // Test PedroPathing command
         Follower follower = drivetrainSubsystem.createFollower();
-        Pose pose1 = new Pose(0,0, 0);
-        Pose pose2 = new Pose(12, 0, 90);
-        Pose pose3 = new Pose(12, 12, 90);
+
+        // PathChain that sweeps across all of the spike marks for the red alliance
+        Pose startPose = new Pose(56.000, 8.000, Math.toRadians(90));
         PathChain path = follower.pathBuilder()
-                .addPath(new BezierLine(pose1, pose2))
-                .setLinearHeadingInterpolation(pose1.getHeading(), pose2.getHeading())
-                .addPath(new BezierLine(pose2, pose3))
-                .setLinearHeadingInterpolation(pose2.getHeading(), pose3.getHeading())
+                .addPath(new BezierLine(new Pose(56.000, 8.000), new Pose(56.000, 36.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
+                .addPath(new BezierLine(new Pose(56.000, 36.000), new Pose(19.000, 36.000)))
+                .setTangentHeadingInterpolation()
+                .addPath(new BezierLine(new Pose(19.000, 36.000), new Pose(56.000, 60.000)))
+                .setTangentHeadingInterpolation()
+                .setReversed()
+                .addPath(new BezierLine(new Pose(56.000, 60.000), new Pose(19.000, 60.000)))
+                .setTangentHeadingInterpolation()
+                .addPath(new BezierLine(new Pose(19.000, 60.000), new Pose(56.000, 84.000)))
+                .setTangentHeadingInterpolation()
+                .setReversed()
+                .addPath(new BezierLine(new Pose(56.000, 84.000), new Pose(19.000, 84.000)))
+                .setTangentHeadingInterpolation()
                 .build();
+
         FollowPathCommand followPathCommand =
-                new FollowPathCommand(pose1, follower, path, drivetrainSubsystem);
+                new FollowPathCommand(startPose, follower, path, drivetrainSubsystem)
+                        .withGlobalMaxPower(0.75);
 
         // Motif AprilTag
         MotifIndicatorCommand motifIndicatorCommand =
@@ -84,9 +96,9 @@ public class AndyOpMode extends CommandOpMode {
         // Bind driver buttons
         GamepadEx gamepad = new GamepadEx(gamepad1);
         gamepad.getGamepadButton(GamepadKeys.Button.B).toggleWhenPressed(motifIndicatorCommand);
-        gamepad.getGamepadButton(GamepadKeys.Button.A).whileHeld(followPathCommand);
+        gamepad.getGamepadButton(GamepadKeys.Button.A).whenHeld(followPathCommand);
         gamepad.getGamepadButton(GamepadKeys.Button.START)
-                .whenPressed(drivetrainSubsystem::resetLocalization);
+                .whenPressed(() -> drivetrainSubsystem.resetLocalization());
     }
 
 }
