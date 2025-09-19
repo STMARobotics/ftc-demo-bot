@@ -22,10 +22,9 @@ public class FollowPathCommand extends CommandBase {
 
     public FollowPathCommand(
             Pose startPose,
-            Follower follower,
             PathChain pathChain,
             DrivetrainSubsystem drivetrainSubsystem) {
-        this.follower = follower;
+        this.follower = drivetrainSubsystem.getFollower();
         this.pathChain = pathChain;
         this.startPose = startPose;
         this.drivetrainSubsystem = drivetrainSubsystem;
@@ -40,7 +39,6 @@ public class FollowPathCommand extends CommandBase {
      * @return This command for chaining
      */
     public FollowPathCommand withGlobalMaxPower(double globalMaxPower) {
-        follower.setMaxPower(globalMaxPower);
         maxPower = globalMaxPower;
         return this;
     }
@@ -58,15 +56,12 @@ public class FollowPathCommand extends CommandBase {
     @Override
     public void initialize() {
         follower.setStartingPose(startPose);
+        follower.setPose(startPose);
+        follower.setMaxPower(maxPower);
         if (maxPower != 1.0) {
             follower.followPath(pathChain, maxPower, holdEnd);
         }
         follower.followPath(pathChain, holdEnd);
-    }
-
-    @Override
-    public void execute() {
-        follower.update();
     }
 
     @Override

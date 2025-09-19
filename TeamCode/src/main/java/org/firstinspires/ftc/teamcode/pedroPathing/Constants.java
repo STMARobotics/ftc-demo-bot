@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.ftc.FollowerBuilder;
 import com.pedropathing.ftc.drivetrains.MecanumConstants;
 import com.pedropathing.ftc.localization.constants.OTOSConstants;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -53,4 +56,17 @@ public class Constants {
     public static final PathConstraints PATH_CONSTRAINTS =
             new PathConstraints(0.99, 100, 1, 1);
 
+    /**
+     * Creates a PedroPathing follower. There should probably only be one follower instance per
+     * OpMode.
+     * @param hardwareMap hardware map
+     * @return new PedroPathing follower
+     */
+    public static Follower createFollower(HardwareMap hardwareMap) {
+        return new FollowerBuilder(FOLLOWER_CONSTANTS, hardwareMap)
+                .pathConstraints(PATH_CONSTRAINTS)
+                .OTOSLocalizer(OTOS_CONSTANTS)
+                .mecanumDrivetrain(DRIVE_CONSTANTS)
+                .build();
+    }
 }

@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.FunctionalCommand;
 import com.seattlesolvers.solverslib.command.RunCommand;
 import com.seattlesolvers.solverslib.gamepad.GamepadEx;
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
@@ -38,11 +38,14 @@ public class AndyOpMode extends CommandOpMode {
          - Pushing to the left on the right stick rotates the the positive direction,
          counterclockwise
          */
-        RunCommand teleopDriveCommand = new RunCommand(() -> drivetrainSubsystem.drive(
-                -gamepad1.left_stick_y, // Stick up is negative but moves +X, so invert
-                -gamepad1.left_stick_x, // Stick left is negative but moves +Y, so invert
-                -gamepad1.right_stick_x, // Stick left is negative but moves +rotation, so invert
-                1),
+        FunctionalCommand teleopDriveCommand = new FunctionalCommand(drivetrainSubsystem::startTeleop,
+                () -> drivetrainSubsystem.drive(
+                    -gamepad1.left_stick_y, // Stick up is negative but moves +X, so invert
+                    -gamepad1.left_stick_x, // Stick left is negative but moves +Y, so invert
+                    -gamepad1.right_stick_x, // Stick left is negative but moves +rotation, so invert
+                    1),
+                (b) -> drivetrainSubsystem.stop(),
+                () -> false,
                 drivetrainSubsystem);
 
         RunCommand telemetryCommand = new RunCommand(() -> {
@@ -64,11 +67,9 @@ public class AndyOpMode extends CommandOpMode {
 
     private void configureButtonBindings() {
         // Test PedroPathing command
-        Follower follower = drivetrainSubsystem.createFollower();
-
         // PathChain that sweeps across all of the spike marks for the red alliance
         Pose startPose = new Pose(56.000, 8.000, Math.toRadians(90));
-        PathChain path = follower.pathBuilder()
+        PathChain path = drivetrainSubsystem.pathBuilder()
                 .addPath(new BezierLine(new Pose(56.000, 8.000), new Pose(56.000, 36.000)))
                 .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
                 .addPath(new BezierLine(new Pose(56.000, 36.000), new Pose(19.000, 36.000)))
@@ -86,8 +87,8 @@ public class AndyOpMode extends CommandOpMode {
                 .build();
 
         FollowPathCommand followPathCommand =
-                new FollowPathCommand(startPose, follower, path, drivetrainSubsystem)
-                        .withGlobalMaxPower(0.75);
+                new FollowPathCommand(startPose, path, drivetrainSubsystem)
+                        .withGlobalMaxPower(0.5);
 
         // Motif AprilTag
         MotifIndicatorCommand motifIndicatorCommand =
