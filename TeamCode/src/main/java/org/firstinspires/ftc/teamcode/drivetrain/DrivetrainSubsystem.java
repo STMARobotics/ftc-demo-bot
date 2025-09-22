@@ -24,7 +24,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
     }
 
     /**
-     * Drive the robot on field centric manner
+     * Drive the robot in field centric manner. This function also squares the inputs for better
+     * fine control.
      * @param translationX robot strafe along the X axis in range [-1, 1]. The X axis runs along the
      *                     field perimeter on the audience side. The robot is facing the positive
      *                     X direction when it has a heading of 0 radians (0°)
@@ -43,6 +44,16 @@ public class DrivetrainSubsystem extends SubsystemBase {
         double modifiedRotation = square(rotation * clampedReduction);
 
         follower.setTeleOpDrive(modifiedX, modifiedY, modifiedRotation, false);
+    }
+
+    /**
+     * Drive the robot robot centric manner. This method is useful for autonomous control.
+     * @param translationX robot strafe along the X axis in range [-1, 1]
+     * @param translationY robot speed along the Y axis in range [-1, 1]
+     * @param rotation robot rotation speed in range of [-1, 1]
+     */
+    public void driveRobotCentric(double translationX, double translationY, double rotation) {
+        follower.setTeleOpDrive(translationX, translationY, rotation, true);
     }
 
     public void startTeleop() {

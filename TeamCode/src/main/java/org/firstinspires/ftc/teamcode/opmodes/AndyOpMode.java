@@ -13,7 +13,9 @@ import com.seattlesolvers.solverslib.gamepad.GamepadKeys;
 import org.firstinspires.ftc.teamcode.drivetrain.DrivetrainSubsystem;
 import org.firstinspires.ftc.teamcode.drivetrain.FollowPathCommand;
 import org.firstinspires.ftc.teamcode.led.LedSubsystem;
+import org.firstinspires.ftc.teamcode.vision.AimCommand;
 import org.firstinspires.ftc.teamcode.vision.AprilTagSubsystem;
+import org.firstinspires.ftc.teamcode.vision.HuskyLensSubsystem;
 import org.firstinspires.ftc.teamcode.vision.MotifIndicatorCommand;
 
 @TeleOp(name="Andy", group = "Andy")
@@ -22,6 +24,7 @@ public class AndyOpMode extends CommandOpMode {
     private DrivetrainSubsystem drivetrainSubsystem;
     private LedSubsystem ledSubsystem;
     private AprilTagSubsystem aprilTagSubsystem;
+    private HuskyLensSubsystem huskyLensSubsystem;
 
     @Override
     public void initialize() {
@@ -29,6 +32,7 @@ public class AndyOpMode extends CommandOpMode {
         drivetrainSubsystem = new DrivetrainSubsystem(hardwareMap);
         ledSubsystem = new LedSubsystem(hardwareMap);
         aprilTagSubsystem = new AprilTagSubsystem(hardwareMap);
+        huskyLensSubsystem = new HuskyLensSubsystem(hardwareMap);
 
         /*
         The origin is the field perimeter corner by the red loading zone.
@@ -90,6 +94,8 @@ public class AndyOpMode extends CommandOpMode {
                 new FollowPathCommand(startPose, path, drivetrainSubsystem)
                         .withGlobalMaxPower(0.5);
 
+        AimCommand aimCommand = new AimCommand(drivetrainSubsystem, huskyLensSubsystem, telemetry, 1);
+
         // Motif AprilTag
         MotifIndicatorCommand motifIndicatorCommand =
                 new MotifIndicatorCommand(ledSubsystem, aprilTagSubsystem, telemetry);
@@ -100,6 +106,7 @@ public class AndyOpMode extends CommandOpMode {
         gamepad.getGamepadButton(GamepadKeys.Button.A).whenHeld(followPathCommand);
         gamepad.getGamepadButton(GamepadKeys.Button.START)
                 .whenPressed(() -> drivetrainSubsystem.resetLocalization());
+        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whileHeld(aimCommand);
     }
 
 }
