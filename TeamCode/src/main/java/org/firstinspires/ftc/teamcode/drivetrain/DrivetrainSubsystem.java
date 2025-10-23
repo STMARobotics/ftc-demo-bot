@@ -1,26 +1,26 @@
 package org.firstinspires.ftc.teamcode.drivetrain;
 
-import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.DRIVE_CONSTANTS;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.FOLLOWER_CONSTANTS;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.OTOS_CONSTANTS;
-import static org.firstinspires.ftc.teamcode.pedroPathing.Constants.PATH_CONSTRAINTS;
-
-import com.pedropathing.follower.Follower;
-import com.pedropathing.ftc.FollowerBuilder;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 import com.seattlesolvers.solverslib.util.MathUtils;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 /**
  * Drivetrain subsystem. Encapsulates the details of <i>how</i> the drivetrain works.
  */
 public class DrivetrainSubsystem extends SubsystemBase {
 
-    private final HardwareMap hardwareMap;
+    private static final String FRONT_LEFT_MOTOR_NAME = "front_left_motor";
+    private static final String BACK_LEFT_MOTOR_NAME = "back_left_motor";
+    private static final String FRONT_RIGHT_MOTOR_NAME = "front_right_motor";
+    private static final String BACK_RIGHT_MOTOR_NAME = "back_right_motor";
+
 
     // Motors
     private final DcMotor frontLeftMotor;
@@ -28,43 +28,31 @@ public class DrivetrainSubsystem extends SubsystemBase {
     private final DcMotor frontRightMotor;
     private final DcMotor backRightMotor;
 
-    // OTOS sensor
-    private final SparkFunOTOS otosSensor;
-
-    private SparkFunOTOS.Pose2D currentPose = new SparkFunOTOS.Pose2D();
+    private final IMU imu;
 
     public DrivetrainSubsystem(HardwareMap hardwareMap) {
-        this.hardwareMap = hardwareMap;
+        frontLeftMotor = hardwareMap.get(DcMotor.class, FRONT_LEFT_MOTOR_NAME);
+        backLeftMotor = hardwareMap.get(DcMotor.class, BACK_LEFT_MOTOR_NAME);
+        frontRightMotor = hardwareMap.get(DcMotor.class, FRONT_RIGHT_MOTOR_NAME);
+        backRightMotor = hardwareMap.get(DcMotor.class, BACK_RIGHT_MOTOR_NAME);
 
-        frontLeftMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.leftFrontMotorName);
-        backLeftMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.leftRearMotorName);
-        frontRightMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.rightFrontMotorName);
-        backRightMotor = hardwareMap.get(DcMotor.class, DRIVE_CONSTANTS.rightRearMotorName);
 
-        frontLeftMotor.setDirection(DRIVE_CONSTANTS.leftFrontMotorDirection);
-        backLeftMotor.setDirection(DRIVE_CONSTANTS.leftRearMotorDirection);
-        frontRightMotor.setDirection(DRIVE_CONSTANTS.rightFrontMotorDirection);
-        backRightMotor.setDirection(DRIVE_CONSTANTS.rightRearMotorDirection);
+        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        backRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Set up the OTOS sensor, using the same constants we use to configure it with PedroPathing
-        otosSensor = hardwareMap.get(SparkFunOTOS.class, OTOS_CONSTANTS.hardwareMapName);
-        otosSensor.setLinearUnit(OTOS_CONSTANTS.linearUnit);
-        otosSensor.setAngularUnit(OTOS_CONSTANTS.angleUnit);
-        otosSensor.setOffset(OTOS_CONSTANTS.offset);
-        otosSensor.setLinearScalar(OTOS_CONSTANTS.linearScalar);
-        otosSensor.setAngularScalar(OTOS_CONSTANTS.angularScalar);
-        otosSensor.calibrateImu();
-        otosSensor.resetTracking();
+        imu = hardwareMap.get(IMU.class, "imu");
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.DOWN,
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
+        imu.initialize(parameters);
 
-        // Get the hardware and firmware version
-        SparkFunOTOS.Version hwVersion = new SparkFunOTOS.Version();
-        SparkFunOTOS.Version fwVersion = new SparkFunOTOS.Version();
-        otosSensor.getVersionInfo(hwVersion, fwVersion);
         resetLocalization();
     }
 
@@ -88,7 +76,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
         double modifiedRotation = square(rotation * clampedReduction);
 
         // Rotate the heading based on the robot's heading on the field
-        double botHeading = currentPose.h;
+        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         double rotX = modifiedX * Math.sin(botHeading) - modifiedY * Math.cos(botHeading);
         double rotY = modifiedX * Math.cos(botHeading) + modifiedY * Math.sin(botHeading);
 
@@ -113,37 +101,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
         backRightMotor.setPower(0.0);
     }
 
-    /**
-     * Creates a PedroPath Follower.
-     * @return new follower
-     */
-    public Follower createFollower() {
-        return new FollowerBuilder(FOLLOWER_CONSTANTS, hardwareMap)
-                .pathConstraints(PATH_CONSTRAINTS)
-                .OTOSLocalizer(OTOS_CONSTANTS)
-                .mecanumDrivetrain(DRIVE_CONSTANTS)
-                .build();
-    }
-
     public void resetLocalization() {
-        otosSensor.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
+        imu.resetYaw();
     }
 
-    @Override
-    public void periodic() {
-        // This is a blocking call that can take tens of milliseconds, so only do it once per period
-        currentPose = otosSensor.getPosition();
-    }
-
-    /**
-     * Adds drivetrain telemetry data.
-     * @param telemetry telemetry object
-     */
     public void telemetrize(Telemetry telemetry) {
-        // Log the position to the telemetry
-        telemetry.addData("X coordinate (meters)", currentPose.x);
-        telemetry.addData("Y coordinate (meters)", currentPose.y);
-        telemetry.addData("Heading angle (radians)", currentPose.h);
     }
 
     public static double square(double value) {
